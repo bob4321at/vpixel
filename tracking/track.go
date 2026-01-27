@@ -87,6 +87,7 @@ func (face *TrackingData) Update() {
 	face.AverageHeadPos.Y = (face.Left[1] + face.Right[1] + (face.Mouth.LeftCorner[1]+face.Mouth.RightCorner[1]+face.Mouth.UpperLip[1]+face.Mouth.LowerLip[1])/4) / 3
 
 	fmt.Println(((utils.Deg2Rad(utils.GetAngle(utils.Vec2{X: face.Mouth.UpperLip[0], Y: face.Mouth.UpperLip[1]}, utils.Vec2{X: face.Left[0], Y: face.Left[1]})) + utils.GetAngle(utils.Vec2{X: face.Mouth.UpperLip[0], Y: face.Mouth.UpperLip[1]}, utils.Vec2{X: face.Right[0], Y: face.Right[1]})) / 2) + 14)
+	HeadAngle = ((utils.Deg2Rad(utils.GetAngle(utils.Vec2{X: face.Mouth.UpperLip[0], Y: face.Mouth.UpperLip[1]}, utils.Vec2{X: face.Left[0], Y: face.Left[1]})) + utils.GetAngle(utils.Vec2{X: face.Mouth.UpperLip[0], Y: face.Mouth.UpperLip[1]}, utils.Vec2{X: face.Right[0], Y: face.Right[1]})) / 2) + 14
 
 	AverageHeadPos = face.AverageHeadPos
 }

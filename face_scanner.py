@@ -1,4 +1,3 @@
-# tracker.py
 import cv2
 import mediapipe as mp
 import json
@@ -8,7 +7,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 import time
 
-# Global variable to hold latest tracking data
 latest_data = {
     "left": None,
     "right": None,
@@ -22,7 +20,6 @@ latest_data = {
 }
 data_lock = threading.Lock()
 
-# MediaPipe setup
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
@@ -110,7 +107,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == '/' or self.path == '/data':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')  # Allow CORS
+            self.send_header('Access-Control-Allow-Origin', '*')  
             self.end_headers()
 
             with data_lock:
@@ -122,15 +119,12 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format, *args):
-        # Optional: suppress console logs
         return
 
 if __name__ == "__main__":
-    # Start tracking in background thread
     tracker_thread = threading.Thread(target=tracking_loop, daemon=True)
     tracker_thread.start()
 
-    # Give camera a moment to initialize
     time.sleep(1.0)
 
     server = ThreadedHTTPServer(('localhost', 8080), Handler)

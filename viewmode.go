@@ -18,6 +18,9 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 	UpscaleImg.Fill(color.RGBA{0, 0, 0, 0})
 
 	op := ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-66*2.5, -60*2.5)
+	op.GeoM.Rotate(tracking.HeadAngle * (3.14159 / 180))
+	op.GeoM.Translate(66*2.5, 60*2.5)
 	op.GeoM.Scale(3, 3)
 	op.GeoM.Translate(-66*2.5+tracking.AverageHeadPos.X, -60*2.5+tracking.AverageHeadPos.Y)
 
@@ -25,6 +28,8 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 	ebitenutil.DebugPrintAt(screen, mouth_openness_string, 1, 1)
 	mouth_wideness_string := "MouthWideness: " + strconv.FormatFloat(tracking.WeightOptions["mouth_width"], 'f', -1, 64)
 	ebitenutil.DebugPrintAt(screen, mouth_wideness_string, 1, 16)
+	head_angle_string := "HeadAngle: " + strconv.FormatFloat(tracking.HeadAngle, 'f', -1, 64)
+	ebitenutil.DebugPrintAt(screen, head_angle_string, 1, 32)
 
 	for _, triangle := range model.Triangles {
 		for i := range triangle.Points {

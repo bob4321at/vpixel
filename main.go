@@ -4,6 +4,7 @@ import (
 	"main/models"
 	"main/tracking"
 	"main/utils"
+	"os"
 
 	"github.com/ebitengine/debugui"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,7 +33,7 @@ func (g *Game) Update() error {
 	utils.MousePos.X = float64(mx-66*5) / 3
 	utils.MousePos.Y = float64(my) / 3
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyV) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyV) && !ebiten.IsKeyPressed(ebiten.KeyShift) && !ebiten.IsKeyPressed(ebiten.KeyControl) {
 		if Mode == EditMode {
 			Mode = ViewMode
 		} else if Mode == ViewMode {
@@ -44,10 +45,13 @@ func (g *Game) Update() error {
 
 	FaceData.Update()
 
+	ebiten.SetWindowMousePassthrough(false)
+
 	switch Mode {
 	case EditMode:
-		EditUpdate(&g.debugui)
+		EditUpdate(&g.debugui, &Model)
 	case ViewMode:
+		ebiten.SetWindowMousePassthrough(true)
 		ViewUpdate()
 	case TrackingMode:
 	}
@@ -77,6 +81,11 @@ func main() {
 	ebiten.SetWindowDecorated(false)
 
 	Model = models.NewModel()
+
+	_, err := os.ReadDir("./model_files")
+	if err != nil {
+		os.Mkdir("model_files", os.ModePerm)
+	}
 
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		panic(err)

@@ -31,5 +31,9 @@ func Deg2Rad(num float64) float64 {
 	return num * (180 / 3.14159)
 }
 
+func RemoveArrayElement[T any](index_to_remove int, slice *[]T) {
+	*slice = append((*slice)[:index_to_remove], (*slice)[index_to_remove+1:]...)
+}
+
 var MousePos Vec2
 var ICS debugui.InputCapturingState

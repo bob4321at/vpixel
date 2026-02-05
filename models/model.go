@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"main/triangle"
@@ -17,6 +18,30 @@ type Model struct {
 	Triangles []triangle.Triangle
 }
 
+type ModelJson struct {
+	Triangles []triangle.TriangleJson
+}
+
+func (model *Model) Encode() ModelJson {
+	new_model := ModelJson{}
+
+	for _, triangle := range model.Triangles {
+		new_model.Triangles = append(new_model.Triangles, triangle.Encode())
+	}
+
+	fmt.Println(new_model)
+
+	return new_model
+}
+
+func (model *ModelJson) Decode(new_model *Model) {
+	new_model.Triangles = nil
+	fmt.Println(model)
+	for _, triangle := range model.Triangles {
+		new_model.Triangles = append(new_model.Triangles, triangle.Decode())
+	}
+}
+
 var SelectedVertex int
 var SelectedTriangle int = 0
 
@@ -25,6 +50,12 @@ var LastSelectedVertex int
 var Ctx *debugui.Context
 
 var WeightConfigOpen bool
+
+var SaveName string
+
+var CopyPasteColorIndex int
+
+var TexturePathEdit string
 
 func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 	if SelectedTriangle == -1 {
@@ -72,6 +103,17 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 			WeightConfigOpen = !WeightConfigOpen
 		})
 
+		if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+			if ebiten.IsKeyPressed(ebiten.KeyControl) {
+				CopyPasteColorIndex = SelectedTriangle
+			}
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyV) {
+			if ebiten.IsKeyPressed(ebiten.KeyControl) {
+				model.Triangles[SelectedTriangle].SetColors(model.Triangles[CopyPasteColorIndex].Color)
+			}
+		}
+
 		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
 			closest_point := utils.Vec2{X: -1, Y: -1}
 			closest_dist := 10000000000000.0
@@ -102,79 +144,93 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 		}
 	}
 
+	Ctx.TextField(&TexturePathEdit)
+	Ctx.Button("Set Texture").On(func() {
+		model.Triangles[SelectedTriangle].SetTexture("./textures/" + TexturePathEdit + ".png")
+		model.Triangles[SelectedTriangle].SetPointsUvPos(utils.Vec2{0, 32}, utils.Vec2{16, 0}, utils.Vec2{32, 32})
+		fmt.Println(model.Triangles[SelectedTriangle])
+	})
+
 	Ctx.Button("New Triangle").On(func() {
 		model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
 	})
 }
 
 func (model *Model) Update() {
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-		SelectedTriangle = -1
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyN) {
-		model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
-		if ebiten.IsKeyPressed(ebiten.KeyShift) {
-			if SelectedTriangle-1 >= 0 {
-				SelectedTriangle -= 1
-			}
-		} else {
-			if SelectedTriangle+1 < len(model.Triangles) {
-				SelectedTriangle += 1
-			}
-		}
-	}
-
 	if utils.ICS == 0 {
 		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButton0) {
 			LastSelectedVertex = SelectedVertex
 		}
-	}
+		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+			SelectedTriangle = -1
+		}
 
-	if len(model.Triangles) != 0 {
-		if ebiten.IsKeyPressed(ebiten.KeyR) {
-			if ebiten.IsKeyPressed(ebiten.KeyShift) {
-				if model.Triangles[SelectedTriangle].Color.X-1 >= 0 {
-					model.Triangles[SelectedTriangle].Color.X -= 1
-				}
-			} else {
-				if model.Triangles[SelectedTriangle].Color.X+1 <= 255 {
-					model.Triangles[SelectedTriangle].Color.X += 1
-				}
-			}
+		if inpututil.IsKeyJustPressed(ebiten.KeyDelete) && SelectedTriangle != -1 {
+			utils.RemoveArrayElement(SelectedTriangle, &model.Triangles)
+			SelectedTriangle = -1
 		}
-	}
-	if len(model.Triangles) != 0 {
-		if ebiten.IsKeyPressed(ebiten.KeyG) {
-			if ebiten.IsKeyPressed(ebiten.KeyShift) {
-				if model.Triangles[SelectedTriangle].Color.Y-1 >= 0 {
-					model.Triangles[SelectedTriangle].Color.Y -= 1
-				}
-			} else {
-				if model.Triangles[SelectedTriangle].Color.Y+1 <= 255 {
-					model.Triangles[SelectedTriangle].Color.Y += 1
-				}
-			}
-		}
-	}
-	if len(model.Triangles) != 0 {
-		if ebiten.IsKeyPressed(ebiten.KeyB) {
-			if ebiten.IsKeyPressed(ebiten.KeyShift) {
-				if model.Triangles[SelectedTriangle].Color.Z-1 >= 0 {
-					model.Triangles[SelectedTriangle].Color.Z -= 1
-				}
-			} else {
-				if model.Triangles[SelectedTriangle].Color.Z+1 <= 255 {
-					model.Triangles[SelectedTriangle].Color.Z += 1
-				}
-			}
-		}
-	}
 
-	if utils.ICS == 0 {
+		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
+			model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
+		}
+
+		if inpututil.IsKeyJustPressed(ebiten.KeyV) && ebiten.IsKeyPressed(ebiten.KeyShift) {
+			LastSelectedVertex += 1
+			if LastSelectedVertex > 2 {
+				LastSelectedVertex = 0
+			}
+		}
+
+		if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
+			if ebiten.IsKeyPressed(ebiten.KeyShift) {
+				if SelectedTriangle-1 >= 0 {
+					SelectedTriangle -= 1
+				}
+			} else {
+				if SelectedTriangle+1 < len(model.Triangles) {
+					SelectedTriangle += 1
+				}
+			}
+		}
+		if len(model.Triangles) != 0 {
+			if ebiten.IsKeyPressed(ebiten.KeyR) {
+				if ebiten.IsKeyPressed(ebiten.KeyShift) {
+					if model.Triangles[SelectedTriangle].Color.X-1 >= 0 {
+						model.Triangles[SelectedTriangle].Color.X -= 1
+					}
+				} else {
+					if model.Triangles[SelectedTriangle].Color.X+1 <= 255 {
+						model.Triangles[SelectedTriangle].Color.X += 1
+					}
+				}
+			}
+		}
+		if len(model.Triangles) != 0 {
+			if ebiten.IsKeyPressed(ebiten.KeyG) {
+				if ebiten.IsKeyPressed(ebiten.KeyShift) {
+					if model.Triangles[SelectedTriangle].Color.Y-1 >= 0 {
+						model.Triangles[SelectedTriangle].Color.Y -= 1
+					}
+				} else {
+					if model.Triangles[SelectedTriangle].Color.Y+1 <= 255 {
+						model.Triangles[SelectedTriangle].Color.Y += 1
+					}
+				}
+			}
+		}
+		if len(model.Triangles) != 0 {
+			if ebiten.IsKeyPressed(ebiten.KeyB) {
+				if ebiten.IsKeyPressed(ebiten.KeyShift) {
+					if model.Triangles[SelectedTriangle].Color.Z-1 >= 0 {
+						model.Triangles[SelectedTriangle].Color.Z -= 1
+					}
+				} else {
+					if model.Triangles[SelectedTriangle].Color.Z+1 <= 255 {
+						model.Triangles[SelectedTriangle].Color.Z += 1
+					}
+				}
+			}
+		}
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
 			model.Triangles[SelectedTriangle].Points[LastSelectedVertex].VecPos = utils.Vec2{X: utils.MousePos.X, Y: utils.MousePos.Y}
 		} else {
@@ -211,6 +267,10 @@ func (model *Model) Draw(screen *ebiten.Image) {
 
 		for _, weight := range vertex.Weight {
 			vector.StrokeCircle(screen, float32(vertex.VecPos.X+weight.Posistion.X), float32(vertex.VecPos.Y+weight.Posistion.Y), 1, 1, color.RGBA{255, 100, 100, 255}, false)
+		}
+
+		if selected_tri.Texture != nil {
+			screen.DrawImage(selected_tri.Texture, &ebiten.DrawImageOptions{})
 		}
 	}
 }

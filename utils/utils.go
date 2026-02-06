@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"errors"
+	"fmt"
 	"math"
 
 	"github.com/ebitengine/debugui"
@@ -33,6 +35,35 @@ func Deg2Rad(num float64) float64 {
 
 func RemoveArrayElement[T any](index_to_remove int, slice *[]T) {
 	*slice = append((*slice)[:index_to_remove], (*slice)[index_to_remove+1:]...)
+}
+
+func MoveElement[T any](slice []T, from, to int) error {
+	n := len(slice)
+
+	if n == 0 {
+		return errors.New("cannot move element in empty slice")
+	}
+	if from < 0 || from >= n {
+		return fmt.Errorf("from index %d out of bounds [0, %d]", from, n-1)
+	}
+	if to < 0 || to >= n {
+		return fmt.Errorf("to index %d out of bounds [0, %d]", to, n-1)
+	}
+	if from == to {
+		return nil
+	}
+
+	value := slice[from]
+
+	if from < to {
+		copy(slice[from:], slice[from+1:to+1])
+		slice[to] = value
+	} else { // from > to
+		copy(slice[to+1:], slice[to:from])
+		slice[to] = value
+	}
+
+	return nil
 }
 
 var MousePos Vec2

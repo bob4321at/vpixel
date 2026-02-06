@@ -162,7 +162,7 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 	})
 
 	Ctx.Button("New Triangle").On(func() {
-		model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
+		model.Triangles = append(model.Triangles, triangle.NewTriangle(320, 240))
 	})
 }
 
@@ -181,7 +181,7 @@ func (model *Model) Update() {
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
-			model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
+			model.Triangles = append(model.Triangles, triangle.NewTriangle(320, 240))
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyV) && ebiten.IsKeyPressed(ebiten.KeyShift) {
@@ -214,8 +214,6 @@ func (model *Model) Update() {
 					}
 				}
 			}
-		}
-		if len(model.Triangles) != 0 {
 			if ebiten.IsKeyPressed(ebiten.KeyG) {
 				if ebiten.IsKeyPressed(ebiten.KeyShift) {
 					if model.Triangles[SelectedTriangle].Color.Y-1 >= 0 {
@@ -227,8 +225,6 @@ func (model *Model) Update() {
 					}
 				}
 			}
-		}
-		if len(model.Triangles) != 0 {
 			if ebiten.IsKeyPressed(ebiten.KeyB) {
 				if ebiten.IsKeyPressed(ebiten.KeyShift) {
 					if model.Triangles[SelectedTriangle].Color.Z-1 >= 0 {
@@ -239,6 +235,13 @@ func (model *Model) Update() {
 						model.Triangles[SelectedTriangle].Color.Z += 1
 					}
 				}
+			}
+
+			if inpututil.IsKeyJustPressed(ebiten.KeyEqual) {
+				utils.MoveElement(model.Triangles, SelectedTriangle, SelectedTriangle+1)
+			}
+			if inpututil.IsKeyJustPressed(ebiten.KeyMinus) {
+				utils.MoveElement(model.Triangles, SelectedTriangle, SelectedTriangle-1)
 			}
 		}
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {

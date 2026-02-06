@@ -29,8 +29,6 @@ func (model *Model) Encode() ModelJson {
 		new_model.Triangles = append(new_model.Triangles, triangle.Encode())
 	}
 
-	fmt.Println(new_model)
-
 	return new_model
 }
 
@@ -99,8 +97,20 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 			})
 		}
 
+		UvEditPopupId := Ctx.Popup(func(layout debugui.ContainerLayout, popupID debugui.PopupID) {
+			Ctx.NumberFieldF(&model.Triangles[SelectedTriangle].Points[LastSelectedVertex].UvPos.X, 1, 0)
+			Ctx.NumberFieldF(&model.Triangles[SelectedTriangle].Points[LastSelectedVertex].UvPos.Y, 1, 0)
+			Ctx.Button("Close").On(func() {
+				Ctx.ClosePopup(popupID)
+			})
+		})
+
 		Ctx.Button("Open Weight Config").On(func() {
 			WeightConfigOpen = !WeightConfigOpen
+		})
+
+		Ctx.Button("Open Uv Config").On(func() {
+			Ctx.OpenPopup(UvEditPopupId)
 		})
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyC) {

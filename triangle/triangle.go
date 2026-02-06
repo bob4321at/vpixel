@@ -9,92 +9,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-// var Triangle_Shader = `//kage:unit pixels
-// 			package main
-
-// 			var PointVecOne vec2
-// 			var PointVecTwo vec2
-// 			var PointVecThree vec2
-
-// 			var PointUvOne vec2
-// 			var PointUvTwo vec2
-// 			var PointUvThree vec2
-
-// 			var Color vec3
-
-// 			var UvImgWidth int
-// 			var UvImgHeight int
-
-// 			func angleBetween(a vec2, b vec2) float {
-// 				Offset := a - b
-
-// 				return atan2(Offset.y, Offset.x)
-// 			}
-
-// 			func DistanceBetween(a vec2, b vec2) float {
-// 				return sqrt((a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y));
-// 			}
-
-// 			func AreaOfTriangle(VecOne vec2, VecTwo vec2, VecThree vec2) float {
-// 			    a := DistanceBetween(VecTwo, VecOne)
-// 			    b := DistanceBetween(VecThree, VecOne)
-// 			    c := DistanceBetween(VecTwo, VecThree)
-// 			    cosTheta := (a*a + b*b - c*c) / (2 * a * b)
-// 			    theta := acos(cosTheta)
-// 			    return (a * b * sin(theta)) / 2
-// 			}
-
-// 			func Fragment(targetCoords vec4, srcPos vec2, _ vec4) vec4 {
-// 				// return vec4(TextureFromSource.x, 0, 0, 1)
-// 				dir_to_pixel:= vec2(-1*(targetCoords.y- PointVecOne.y), targetCoords.x - PointVecOne.x)
-// 				DirFromPointOneToTwo := vec2(PointVecOne.x - PointVecTwo.x,PointVecOne.y-PointVecTwo.y)
-// 				SideOne:= dot(dir_to_pixel, DirFromPointOneToTwo)
-
-// 				DirFromPointOneToThree:= vec2(PointVecOne.x-PointVecThree.x,PointVecOne.y - PointVecThree.y)
-// 				SideTwo := -dot(dir_to_pixel, DirFromPointOneToThree)
-
-// 				dir_to_pixel= vec2(-1*(targetCoords.y - PointVecThree.y), targetCoords.x - PointVecThree.x)
-// 				DirFromPointTwoToThree:= vec2(PointVecThree.x-PointVecTwo.x,PointVecThree.y - PointVecTwo.y)
-// 				SideThree:= -dot(dir_to_pixel, DirFromPointTwoToThree)
-
-// 				powa := 1.0
-
-// 				if SideOne < 0    {
-// 					if SideTwo > 0   {
-// 						powa = 0
-// 					}
-// 					if SideThree > 0   {
-// 						powa = 0
-// 					}
-// 				} else {
-// 					if SideTwo < 0   {
-// 						powa = 0
-// 					}
-// 					if SideThree < 0   {
-// 						powa = 0
-// 					}
-// 				}
-
-// 				total_area := AreaOfTriangle(PointVecOne, PointVecTwo, PointVecThree)
-
-// 				alpha := AreaOfTriangle(srcPos, PointVecTwo, PointVecThree) / total_area
-//     beta  := AreaOfTriangle(PointVecOne, srcPos, PointVecThree) / total_area
-//     gamma := 1.0 - alpha - beta  // More stable than computing 3rd area
-
-// 				// beta := AreaOfTriangle(srcPos, PointVecTwo, PointVecThree) / total_area
-// 				// gamma:= AreaOfTriangle(PointVecOne, srcPos, PointVecThree) / total_area
-// 				//  alpha := AreaOfTriangle(PointVecOne, PointVecTwo, srcPos) / total_area
-
-// 				UvSource := alpha * PointUvOne + beta * PointUvTwo + gamma * PointUvThree
-
-// 				TextureFromSource := imageSrc1At(UvSource+imageSrc1Origin())
-
-// 				TextureFromSource.w = powa/powa
-
-//		return TextureFromSource*vec4(vec3(1), 1)
-//	}
-//
-// `
 var Triangle_Shader = `//kage:unit pixels
 package main
 
@@ -119,8 +33,10 @@ func Fragment(targetCoords vec4, srcPos vec2, _ vec4) vec4 {
         return vec4(0, 0, 0, 0)
     }
 
-    alpha := AreaOfTriangle(srcPos, PointVecTwo, PointVecThree) / total_area
-    beta  := AreaOfTriangle(PointVecOne, srcPos, PointVecThree) / total_area
+    // alpha := AreaOfTriangle(srcPos, PointVecTwo, PointVecThree) / total_area
+    // beta  := AreaOfTriangle(PointVecOne, srcPos, PointVecThree) / total_area
+    alpha := AreaOfTriangle(targetCoords.xy, PointVecTwo, PointVecThree) / total_area
+beta  := AreaOfTriangle(PointVecOne, targetCoords.xy, PointVecThree) / total_area
     gamma := 1.0 - alpha - beta  // More stable than computing 3rd area
 
     if alpha < 0.0 || beta < 0.0 || gamma < 0.0 {
@@ -129,9 +45,9 @@ func Fragment(targetCoords vec4, srcPos vec2, _ vec4) vec4 {
 
     UvSource := alpha * PointUvOne + beta * PointUvTwo + gamma * PointUvThree
 
-    tex := imageSrc1At(UvSource+imageSrc1Origin())
+    tex := imageSrc1At(UvSource+imageSrc0Origin())
 
-    tex.w = 1
+    // tex.w = 1
 
 	dir_to_pixel:= vec2(-1*(targetCoords.y- PointVecOne.y), targetCoords.x - PointVecOne.x)
 	DirFromPointOneToTwo := vec2(PointVecOne.x - PointVecTwo.x,PointVecOne.y-PointVecTwo.y)
@@ -163,9 +79,9 @@ func Fragment(targetCoords vec4, srcPos vec2, _ vec4) vec4 {
 	}
 
 	if imageSrc1Size().x > 0 {
-    return tex*vec4(Color/255, 1000000*powa)
+    	return tex*vec4(Color/255, powa*tex.w)
 	} else {
-    return vec4(Color/255, 1000000*powa)
+    	return vec4(Color/255, powa)
 	}
 }
 `
@@ -206,13 +122,12 @@ func (triangle *TriangleJson) Decode() Triangle {
 
 	new_triangle.Points = triangle.Points
 
-	if triangle.TexturePath != "" {
-		var err error
-		new_triangle.Texture, _, err = ebitenutil.NewImageFromFile(triangle.TexturePath)
-		if err != nil {
-			panic(err)
-		}
-	}
+	new_triangle.SetTexture(triangle.TexturePath)
+	new_triangle.SetPointsUvPos(
+		triangle.Points[0].UvPos,
+		triangle.Points[1].UvPos,
+		triangle.Points[2].UvPos,
+	)
 
 	new_triangle.Color = triangle.Color
 
@@ -376,12 +291,19 @@ func (triangle *Triangle) SetTexture(path string) {
 
 	triangle.Texture = triangle.Image.Img
 	triangle.TexturePath = path
+	triangle.Texture.Clear()
 	triangle.Texture.DrawImage(temp_img, &ebiten.DrawImageOptions{})
 }
 
 func NewTriangle(screen_res_width, screen_res_height int) (triangle Triangle) {
 	triangle.Image = textures.NewTexture("./empty.png", Triangle_Shader)
 	triangle.Image.Img = ebiten.NewImage(screen_res_width, screen_res_height)
+	triangle.SetTexture("./art/default_tex.png")
+	triangle.SetPointsUvPos(
+		utils.Vec2{X: 0, Y: 3},
+		utils.Vec2{X: 1, Y: 0},
+		utils.Vec2{X: 3, Y: 3},
+	)
 
 	triangle.SetPointsVectorPos(utils.Vec2{X: float64(screen_res_width) / 4 * 3, Y: float64(screen_res_height) / 4}, utils.Vec2{X: float64(screen_res_width) / 2, Y: float64(screen_res_height) / 4 * 3}, utils.Vec2{X: float64(screen_res_width) / 4, Y: float64(screen_res_height) / 4})
 

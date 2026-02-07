@@ -7,9 +7,16 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 import time
 
+# Updated data structure with eyelid points
 latest_data = {
-    "left": None,
-    "right": None,
+    "left_eye": {
+        "top": None,
+        "bottom": None
+    },
+    "right_eye": {
+        "top": None,
+        "bottom": None
+    },
     "mouth": {
         "left_corner": None,
         "right_corner": None,
@@ -24,12 +31,19 @@ mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
     max_num_faces=1,
-    refine_landmarks=True,
+    refine_landmarks=True,  # Required for detailed eyelid points
     min_detection_confidence=0.5
 )
 
-LEFT_IRIS = [474, 475, 476, 477]
-RIGHT_IRIS = [469, 470, 471, 472]
+# Eyelid landmark indices (MediaPipe Face Mesh topology)
+# Left eye = person's left eye (right side of image)
+LEFT_EYE_TOP = 159    # Upper eyelid center
+LEFT_EYE_BOTTOM = 145 # Lower eyelid center
+
+# Right eye = person's right eye (left side of image)
+RIGHT_EYE_TOP = 386   # Upper eyelid center
+RIGHT_EYE_BOTTOM = 374 # Lower eyelid center
+
 MOUTH_POINTS = {
     "left_corner": 78,
     "right_corner": 308,
@@ -59,9 +73,16 @@ def tracking_loop():
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = face_mesh.process(rgb)
 
+            # Initialize output with correct structure
             output = {
-                "left": None,
-                "right": None,
+                "left_eye": {
+                    "top": None,
+                    "bottom": None
+                },
+                "right_eye": {
+                    "top": None,
+                    "bottom": None
+                },
                 "mouth": {
                     "left_corner": None,
                     "right_corner": None,
@@ -75,14 +96,27 @@ def tracking_loop():
                 landmarks = results.multi_face_landmarks[0].landmark
                 h, w = frame.shape[0], frame.shape[1]
 
-                left_x = sum(landmarks[i].x for i in LEFT_IRIS) / 4
-                left_y = sum(landmarks[i].y for i in LEFT_IRIS) / 4
-                output["left"] = [left_x * w, left_y * h]
+                # Left eye (person's left)
+                output["left_eye"]["top"] = [
+                    landmarks[LEFT_EYE_TOP].x * w,
+                    landmarks[LEFT_EYE_TOP].y * h
+                ]
+                output["left_eye"]["bottom"] = [
+                    landmarks[LEFT_EYE_BOTTOM].x * w,
+                    landmarks[LEFT_EYE_BOTTOM].y * h
+                ]
 
-                right_x = sum(landmarks[i].x for i in RIGHT_IRIS) / 4
-                right_y = sum(landmarks[i].y for i in RIGHT_IRIS) / 4
-                output["right"] = [right_x * w, right_y * h]
+                # Right eye (person's right)
+                output["right_eye"]["top"] = [
+                    landmarks[RIGHT_EYE_TOP].x * w,
+                    landmarks[RIGHT_EYE_TOP].y * h
+                ]
+                output["right_eye"]["bottom"] = [
+                    landmarks[RIGHT_EYE_BOTTOM].x * w,
+                    landmarks[RIGHT_EYE_BOTTOM].y * h
+                ]
 
+                # Mouth points
                 for name, idx in MOUTH_POINTS.items():
                     lm = landmarks[idx]
                     output["mouth"][name] = [lm.x * w, lm.y * h]
@@ -129,6 +163,9 @@ if __name__ == "__main__":
 
     server = ThreadedHTTPServer(('localhost', 8080), Handler)
     print("🚀 Face tracking server running on http://localhost:8080/")
+    print("   Tracking eyelid points instead of iris centers:")
+    print("   - left_eye.top/bottom: Person's left eye (image right)")
+    print("   - right_eye.top/bottom: Person's right eye (image left)")
     print("Press Ctrl+C to stop.")
 
     try:

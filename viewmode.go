@@ -20,6 +20,7 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 	op := ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-66*2.5, -60*2.5)
 	op.GeoM.Rotate(tracking.HeadAngle * (3.14159 / 180))
+	op.GeoM.Scale(tracking.DistToEyes/tracking.AverageDistToEyes, tracking.DistToEyes/tracking.AverageDistToEyes)
 	op.GeoM.Translate(66*2.5, 60*2.5)
 	op.GeoM.Scale(3, 3)
 	op.GeoM.Translate(-66*2.5+tracking.AverageHeadPos.X, -60*2.5+tracking.AverageHeadPos.Y)

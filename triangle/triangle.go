@@ -33,10 +33,8 @@ func Fragment(targetCoords vec4, srcPos vec2, _ vec4) vec4 {
         return vec4(0, 0, 0, 0)
     }
 
-    // alpha := AreaOfTriangle(srcPos, PointVecTwo, PointVecThree) / total_area
-    // beta  := AreaOfTriangle(PointVecOne, srcPos, PointVecThree) / total_area
     alpha := AreaOfTriangle(targetCoords.xy, PointVecTwo, PointVecThree) / total_area
-beta  := AreaOfTriangle(PointVecOne, targetCoords.xy, PointVecThree) / total_area
+	beta  := AreaOfTriangle(PointVecOne, targetCoords.xy, PointVecThree) / total_area
     gamma := 1.0 - alpha - beta  // More stable than computing 3rd area
 
     if alpha < 0.0 || beta < 0.0 || gamma < 0.0 {
@@ -46,8 +44,6 @@ beta  := AreaOfTriangle(PointVecOne, targetCoords.xy, PointVecThree) / total_are
     UvSource := alpha * PointUvOne + beta * PointUvTwo + gamma * PointUvThree
 
     tex := imageSrc1At(UvSource+imageSrc0Origin())
-
-    // tex.w = 1
 
 	dir_to_pixel:= vec2(-1*(targetCoords.y- PointVecOne.y), targetCoords.x - PointVecOne.x)
 	DirFromPointOneToTwo := vec2(PointVecOne.x - PointVecTwo.x,PointVecOne.y-PointVecTwo.y)
@@ -150,91 +146,52 @@ func (triangle *Triangle) Draw(screen *ebiten.Image, test_or_real bool) {
 	opts.Images[0] = triangle.Image.Img
 	opts.Images[1] = triangle.Texture
 
-	ModifiedVecOnePos := triangle.Points[0].VecPos
-	ModifiedVecTwoPos := triangle.Points[1].VecPos
-	ModifiedVecThreePos := triangle.Points[2].VecPos
-
-	for _, modification := range triangle.Points[0].Weight {
-		if modification.Invert {
-			angle := utils.GetAngle(ModifiedVecOnePos, utils.Vec2{X: ModifiedVecOnePos.X + modification.Posistion.X, Y: ModifiedVecOnePos.Y + modification.Posistion.Y})
-			dist_between_points := utils.GetDistance(ModifiedVecOnePos.X, ModifiedVecOnePos.Y, ModifiedVecOnePos.X+modification.Posistion.X, ModifiedVecOnePos.Y+modification.Posistion.Y)
-
-			if test_or_real {
-				ModifiedVecOnePos.X = ModifiedVecOnePos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.RealValue)
-				ModifiedVecOnePos.Y = ModifiedVecOnePos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.RealValue)
-			} else {
-				ModifiedVecOnePos.X = ModifiedVecOnePos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.TestValue)
-				ModifiedVecOnePos.Y = ModifiedVecOnePos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.TestValue)
-			}
-		} else {
-			angle := utils.GetAngle(ModifiedVecOnePos, utils.Vec2{X: ModifiedVecOnePos.X + modification.Posistion.X, Y: ModifiedVecOnePos.Y + modification.Posistion.Y})
-			dist_between_points := utils.GetDistance(ModifiedVecOnePos.X, ModifiedVecOnePos.Y, ModifiedVecOnePos.X+modification.Posistion.X, ModifiedVecOnePos.Y+modification.Posistion.Y)
-
-			if test_or_real {
-				ModifiedVecOnePos.X -= math.Sin(angle) * (dist_between_points * modification.RealValue)
-				ModifiedVecOnePos.Y -= math.Cos(angle) * (dist_between_points * modification.RealValue)
-			} else {
-				ModifiedVecOnePos.X -= math.Sin(angle) * (dist_between_points * modification.TestValue)
-				ModifiedVecOnePos.Y -= math.Cos(angle) * (dist_between_points * modification.TestValue)
-			}
-		}
+	ModifiedPointPoses := []utils.Vec2{
+		triangle.Points[0].VecPos,
+		triangle.Points[1].VecPos,
+		triangle.Points[2].VecPos,
 	}
-	for _, modification := range triangle.Points[1].Weight {
-		if modification.Invert {
-			angle := utils.GetAngle(ModifiedVecTwoPos, utils.Vec2{X: ModifiedVecTwoPos.X + modification.Posistion.X, Y: ModifiedVecTwoPos.Y + modification.Posistion.Y})
-			dist_between_points := utils.GetDistance(ModifiedVecTwoPos.X, ModifiedVecTwoPos.Y, ModifiedVecTwoPos.X+modification.Posistion.X, ModifiedVecTwoPos.Y+modification.Posistion.Y)
 
-			if test_or_real {
-				ModifiedVecTwoPos.X = ModifiedVecTwoPos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.RealValue)
-				ModifiedVecTwoPos.Y = ModifiedVecTwoPos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.RealValue)
-			} else {
-				ModifiedVecTwoPos.X = ModifiedVecTwoPos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.TestValue)
-				ModifiedVecTwoPos.Y = ModifiedVecTwoPos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.TestValue)
+	for i := range triangle.Points {
+		ModifiedPoint := &triangle.Points[i]
+		ModifiedPointPos := &ModifiedPointPoses[i]
+		for _, modification := range ModifiedPoint.Weight {
+			if modification.RealValue > modification.Maximum {
+				modification.RealValue = modification.Maximum
+			} else if modification.RealValue < modification.Minimum {
+				modification.RealValue = modification.Minimum
 			}
-		} else {
-			angle := utils.GetAngle(ModifiedVecTwoPos, utils.Vec2{X: ModifiedVecTwoPos.X + modification.Posistion.X, Y: ModifiedVecTwoPos.Y + modification.Posistion.Y})
-			dist_between_points := utils.GetDistance(ModifiedVecTwoPos.X, ModifiedVecTwoPos.Y, ModifiedVecTwoPos.X+modification.Posistion.X, ModifiedVecTwoPos.Y+modification.Posistion.Y)
+			if modification.Invert {
+				angle := utils.GetAngle(*ModifiedPointPos, utils.Vec2{X: ModifiedPointPos.X + modification.Posistion.X, Y: ModifiedPointPos.Y + modification.Posistion.Y})
+				dist_between_points := utils.GetDistance(ModifiedPointPos.X, ModifiedPointPos.Y, ModifiedPointPos.X+modification.Posistion.X, ModifiedPointPos.Y+modification.Posistion.Y)
 
-			if test_or_real {
-				ModifiedVecTwoPos.X -= math.Sin(angle) * (dist_between_points * modification.RealValue)
-				ModifiedVecTwoPos.Y -= math.Cos(angle) * (dist_between_points * modification.RealValue)
+				if test_or_real {
+					ModifiedPointPos.X = ModifiedPointPos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.RealValue)
+					ModifiedPointPos.Y = ModifiedPointPos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.RealValue)
+				} else {
+					ModifiedPointPos.X = ModifiedPointPos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.TestValue)
+					ModifiedPointPos.Y = ModifiedPointPos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.TestValue)
+				}
 			} else {
-				ModifiedVecTwoPos.X -= math.Sin(angle) * (dist_between_points * modification.TestValue)
-				ModifiedVecTwoPos.Y -= math.Cos(angle) * (dist_between_points * modification.TestValue)
-			}
-		}
-	}
-	for _, modification := range triangle.Points[2].Weight {
-		if modification.Invert {
-			angle := utils.GetAngle(ModifiedVecThreePos, utils.Vec2{X: ModifiedVecThreePos.X + modification.Posistion.X, Y: ModifiedVecThreePos.Y + modification.Posistion.Y})
-			dist_between_points := utils.GetDistance(ModifiedVecThreePos.X, ModifiedVecThreePos.Y, ModifiedVecThreePos.X+modification.Posistion.X, ModifiedVecThreePos.Y+modification.Posistion.Y)
+				angle := utils.GetAngle(*ModifiedPointPos, utils.Vec2{X: ModifiedPointPos.X + modification.Posistion.X, Y: ModifiedPointPos.Y + modification.Posistion.Y})
+				dist_between_points := utils.GetDistance(ModifiedPointPos.X, ModifiedPointPos.Y, ModifiedPointPos.X+modification.Posistion.X, ModifiedPointPos.Y+modification.Posistion.Y)
 
-			if test_or_real {
-				ModifiedVecThreePos.X = ModifiedVecThreePos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.RealValue)
-				ModifiedVecThreePos.Y = ModifiedVecThreePos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.RealValue)
-			} else {
-				ModifiedVecThreePos.X = ModifiedVecThreePos.X - math.Sin(angle)*(dist_between_points) + math.Sin(angle)*(dist_between_points*modification.TestValue)
-				ModifiedVecThreePos.Y = ModifiedVecThreePos.Y - math.Cos(angle)*(dist_between_points) + math.Cos(angle)*(dist_between_points*modification.TestValue)
-			}
-		} else {
-			angle := utils.GetAngle(ModifiedVecOnePos, utils.Vec2{X: ModifiedVecOnePos.X + modification.Posistion.X, Y: ModifiedVecOnePos.Y + modification.Posistion.Y})
-			dist_between_points := utils.GetDistance(ModifiedVecOnePos.X, ModifiedVecOnePos.Y, ModifiedVecOnePos.X+modification.Posistion.X, ModifiedVecOnePos.Y+modification.Posistion.Y)
-
-			if test_or_real {
-				ModifiedVecThreePos.X -= math.Sin(angle) * (dist_between_points * modification.RealValue)
-				ModifiedVecThreePos.Y -= math.Cos(angle) * (dist_between_points * modification.RealValue)
-			} else {
-				ModifiedVecThreePos.X -= math.Sin(angle) * (dist_between_points * modification.TestValue)
-				ModifiedVecThreePos.Y -= math.Cos(angle) * (dist_between_points * modification.TestValue)
+				if test_or_real {
+					ModifiedPointPos.X -= math.Sin(angle) * (dist_between_points * modification.RealValue)
+					ModifiedPointPos.Y -= math.Cos(angle) * (dist_between_points * modification.RealValue)
+				} else {
+					ModifiedPointPos.X -= math.Sin(angle) * (dist_between_points * modification.TestValue)
+					ModifiedPointPos.Y -= math.Cos(angle) * (dist_between_points * modification.TestValue)
+				}
 			}
 		}
 	}
 
 	if triangle.Texture != nil {
 		triangle.Image.SetUniforms(map[string]any{
-			"PointVecOne":   []float32{float32(ModifiedVecOnePos.X), float32(ModifiedVecOnePos.Y)},
-			"PointVecTwo":   []float32{float32(ModifiedVecTwoPos.X), float32(ModifiedVecTwoPos.Y)},
-			"PointVecThree": []float32{float32(ModifiedVecThreePos.X), float32(ModifiedVecThreePos.Y)},
+			"PointVecOne":   []float32{float32(ModifiedPointPoses[0].X), float32(ModifiedPointPoses[0].Y)},
+			"PointVecTwo":   []float32{float32(ModifiedPointPoses[1].X), float32(ModifiedPointPoses[1].Y)},
+			"PointVecThree": []float32{float32(ModifiedPointPoses[2].X), float32(ModifiedPointPoses[2].Y)},
 
 			"PointUvOne":   []float32{float32(triangle.Points[0].UvPos.X), float32(triangle.Points[0].UvPos.Y)},
 			"PointUvTwo":   []float32{float32(triangle.Points[1].UvPos.X), float32(triangle.Points[1].UvPos.Y)},
@@ -247,9 +204,9 @@ func (triangle *Triangle) Draw(screen *ebiten.Image, test_or_real bool) {
 		})
 	} else {
 		triangle.Image.SetUniforms(map[string]any{
-			"PointVecOne":   []float32{float32(ModifiedVecOnePos.X), float32(ModifiedVecOnePos.Y)},
-			"PointVecTwo":   []float32{float32(ModifiedVecTwoPos.X), float32(ModifiedVecTwoPos.Y)},
-			"PointVecThree": []float32{float32(ModifiedVecThreePos.X), float32(ModifiedVecThreePos.Y)},
+			"PointVecOne":   []float32{float32(ModifiedPointPoses[0].X), float32(ModifiedPointPoses[0].Y)},
+			"PointVecTwo":   []float32{float32(ModifiedPointPoses[1].X), float32(ModifiedPointPoses[1].Y)},
+			"PointVecThree": []float32{float32(ModifiedPointPoses[2].X), float32(ModifiedPointPoses[2].Y)},
 
 			"PointUvOne":   []float32{float32(triangle.Points[0].UvPos.X), float32(triangle.Points[0].UvPos.Y)},
 			"PointUvTwo":   []float32{float32(triangle.Points[1].UvPos.X), float32(triangle.Points[1].UvPos.Y)},

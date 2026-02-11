@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"main/utils"
+	"math"
 	"net/http"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type EyePoints struct {
@@ -30,7 +32,6 @@ type TrackingData struct {
 	Error     string      `json:"error,omitempty"`
 	Timestamp float64     `json:"timestamp"`
 
-	// Client-side computed fields (not from server JSON)
 	HowOpenMouthIs float64
 	HowWideMouthIs float64
 
@@ -50,6 +51,10 @@ var WeightOptions = map[string]float64{
 	"mouth_width":   0,
 	"lefteye_open":  0,
 	"righteye_open": 0,
+
+	"sin_slow": 0,
+	"sin_mid":  0,
+	"sin_fast": 0,
 }
 
 var BiggestMouth float64 = 1
@@ -59,6 +64,11 @@ var BiggestRightEye float64 = 1
 
 var AverageHeadPos utils.Vec2
 var HeadAngle float64
+
+var EyeTrack bool
+
+var DistToEyes float64
+var AverageDistToEyes float64
 
 func (face *TrackingData) Update() {
 	HttpRequest, err := http.Get("http://localhost:8080")
@@ -106,11 +116,15 @@ func (face *TrackingData) Update() {
 	face.HowOpenMouthIs = utils.GetDistance(face.Mouth.UpperLip[0], face.Mouth.UpperLip[1], face.Mouth.LowerLip[0], face.Mouth.LowerLip[1])
 	face.HowWideMouthIs = utils.GetDistance(face.Mouth.LeftCorner[0], face.Mouth.LeftCorner[1], face.Mouth.RightCorner[0], face.Mouth.RightCorner[1])
 
+	DistToEyes += float64(int(utils.GetDistance(face.AverageLeftEyePos.X, face.AverageLeftEyePos.Y, face.AverageRightEyePos.X, face.AverageRightEyePos.Y)*10)) / 10
+	DistToEyes /= 2
+
 	if ebiten.IsKeyPressed(ebiten.KeyC) {
 		BiggestMouth = face.HowOpenMouthIs
 		WidestMouth = face.HowWideMouthIs
 		BiggestLeftEye = face.LeftEyeOpenness
 		BiggestRightEye = face.RightEyeOpenness
+		AverageDistToEyes = utils.GetDistance(face.AverageLeftEyePos.X, face.AverageLeftEyePos.Y, face.AverageRightEyePos.X, face.AverageRightEyePos.Y)
 	}
 
 	WeightOptions["mouth_open"] += face.HowOpenMouthIs / BiggestMouth
@@ -118,10 +132,23 @@ func (face *TrackingData) Update() {
 	WeightOptions["mouth_open"] /= 2
 	WeightOptions["mouth_width"] /= 2
 
-	WeightOptions["lefteye_open"] += face.LeftEyeOpenness / BiggestLeftEye
-	WeightOptions["righteye_open"] += face.RightEyeOpenness / BiggestRightEye
-	WeightOptions["lefteye_open"] /= 2
-	WeightOptions["righteye_open"] /= 2
+	if inpututil.IsKeyJustPressed(ebiten.KeyE) {
+		EyeTrack = !EyeTrack
+	}
+
+	if EyeTrack {
+		WeightOptions["lefteye_open"] += face.LeftEyeOpenness / BiggestLeftEye
+		WeightOptions["righteye_open"] += face.RightEyeOpenness / BiggestRightEye
+		WeightOptions["lefteye_open"] /= 2
+		WeightOptions["righteye_open"] /= 2
+	} else {
+		WeightOptions["lefteye_open"] = 1
+		WeightOptions["righteye_open"] = 1
+	}
+
+	WeightOptions["sin_slow"] = math.Sqrt(math.Sin(float64(float64(utils.Tick)/60)) * math.Sin(float64(float64(utils.Tick)/60)))
+	WeightOptions["sin_mid"] = math.Sqrt(math.Sin(float64(float64(utils.Tick)/40)) * math.Sin(float64(float64(utils.Tick)/40)))
+	WeightOptions["sin_fast"] = math.Sqrt(math.Sin(float64(float64(utils.Tick)/20)) * math.Sin(float64(float64(utils.Tick)/20)))
 
 	face.AverageHeadPos.X = (face.AverageLeftEyePos.X + face.AverageRightEyePos.X + (face.Mouth.LeftCorner[0]+face.Mouth.RightCorner[0]+face.Mouth.UpperLip[0]+face.Mouth.LowerLip[0])/4) / 3
 	face.AverageHeadPos.Y = (face.AverageLeftEyePos.Y + face.AverageRightEyePos.Y + (face.Mouth.LeftCorner[1]+face.Mouth.RightCorner[1]+face.Mouth.UpperLip[1]+face.Mouth.LowerLip[1])/4) / 3

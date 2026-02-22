@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"main/triangle"
@@ -34,7 +33,6 @@ func (model *Model) Encode() ModelJson {
 
 func (model *ModelJson) Decode(new_model *Model) {
 	new_model.Triangles = nil
-	fmt.Println(model)
 	for _, triangle := range model.Triangles {
 		new_model.Triangles = append(new_model.Triangles, triangle.Decode())
 	}
@@ -52,6 +50,7 @@ var WeightConfigOpen bool
 var SaveName string
 
 var CopyPasteColorIndex int
+var CopyPasteWeight *[]triangle.Weight
 
 var TexturePathEdit string
 
@@ -116,11 +115,15 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 		if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 			if ebiten.IsKeyPressed(ebiten.KeyControl) {
 				CopyPasteColorIndex = SelectedTriangle
+			} else if ebiten.IsKeyPressed(ebiten.KeyAlt) {
+				CopyPasteWeight = &model.Triangles[SelectedTriangle].Points[SelectedVertex].Weight
 			}
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyV) {
 			if ebiten.IsKeyPressed(ebiten.KeyControl) {
 				model.Triangles[SelectedTriangle].SetColors(model.Triangles[CopyPasteColorIndex].Color)
+			} else if ebiten.IsKeyPressed(ebiten.KeyAlt) {
+				model.Triangles[SelectedTriangle].Points[LastSelectedVertex].Weight = *CopyPasteWeight
 			}
 		}
 
@@ -157,8 +160,7 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 	Ctx.TextField(&TexturePathEdit)
 	Ctx.Button("Set Texture").On(func() {
 		model.Triangles[SelectedTriangle].SetTexture("./textures/" + TexturePathEdit + ".png")
-		model.Triangles[SelectedTriangle].SetPointsUvPos(utils.Vec2{0, 32}, utils.Vec2{16, 0}, utils.Vec2{32, 32})
-		fmt.Println(model.Triangles[SelectedTriangle])
+		model.Triangles[SelectedTriangle].SetPointsUvPos(utils.Vec2{X: 0, Y: 32}, utils.Vec2{X: 16, Y: 0}, utils.Vec2{X: 32, Y: 32})
 	})
 
 	Ctx.Button("New Triangle").On(func() {

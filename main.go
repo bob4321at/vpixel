@@ -16,9 +16,10 @@ type Game struct {
 }
 
 const (
-	EditMode     int = 0
-	ViewMode         = 1
-	TrackingMode     = 2
+	EditMode      int = 0
+	ViewMode          = 1
+	NetworkConfig     = 2
+	TrackingMode      = 3
 )
 
 var Mode = EditMode
@@ -33,27 +34,33 @@ func (g *Game) Update() error {
 	utils.MousePos.X = float64(mx-66*5) / 3
 	utils.MousePos.Y = float64(my) / 3
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyV) && !ebiten.IsKeyPressed(ebiten.KeyShift) && !ebiten.IsKeyPressed(ebiten.KeyControl) {
-		if Mode == EditMode {
+	if inpututil.IsKeyJustPressed(ebiten.KeyV) && !ebiten.IsKeyPressed(ebiten.KeyShift) && !ebiten.IsKeyPressed(ebiten.KeyControl) && !ebiten.IsKeyPressed(ebiten.KeyAlt) {
+		switch Mode {
+		case EditMode:
 			Mode = ViewMode
-		} else if Mode == ViewMode {
+		case ViewMode:
+			Mode = NetworkConfig
+		case NetworkConfig:
 			Mode = TrackingMode
-		} else if Mode == TrackingMode {
+		case TrackingMode:
 			Mode = EditMode
 		}
 	}
 
 	FaceData.Update()
 
-	ebiten.SetWindowMousePassthrough(false)
-
 	switch Mode {
 	case EditMode:
+		ebiten.SetWindowMousePassthrough(false)
 		EditUpdate(&g.debugui, &Model)
 	case ViewMode:
 		ebiten.SetWindowMousePassthrough(true)
 		ViewUpdate()
+	case NetworkConfig:
+		ebiten.SetWindowMousePassthrough(false)
+		NetworkModeUpdate(&g.debugui, &Model)
 	case TrackingMode:
+		ebiten.SetWindowMousePassthrough(false)
 	}
 
 	return nil
@@ -65,6 +72,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		EditDraw(screen, *g, &g.debugui)
 	case ViewMode:
 		ViewDraw(screen, FaceData, Model)
+	case NetworkConfig:
+		NetworkModeDraw(screen, &g.debugui)
 	case TrackingMode:
 		TrackDraw(screen, FaceData)
 	}

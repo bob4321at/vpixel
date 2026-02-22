@@ -18,6 +18,10 @@ type Vec3 struct {
 	X, Y, Z float64
 }
 
+type Vec4 struct {
+	X, Y, Z, W float64
+}
+
 func GetDistance(x1, y1, x2, y2 float64) float64 {
 	return math.Sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 }

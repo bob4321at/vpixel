@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"main/models"
+	"main/networking"
 	"main/tracking"
 	"strconv"
 
@@ -14,7 +15,7 @@ func ViewUpdate() {
 }
 
 func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Model) {
-	screen.Fill(color.RGBA{0, 0, 0, 0})
+	screen.Fill(color.RGBA{0, 255, 0, 255})
 	UpscaleImg.Fill(color.RGBA{0, 0, 0, 0})
 
 	op := ebiten.DrawImageOptions{}
@@ -48,6 +49,41 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 		triangle_op.GeoM.Translate(tracking.AverageHeadPos.X, tracking.AverageHeadPos.Y)
 		triangle.Draw(UpscaleImg, true)
 	}
+
+	networking.UsersModel.Range(func(key, value any) bool {
+		if networking.ThisUsersId == key {
+			return true
+		}
+
+		var model_to_draw models.Model
+		var err bool
+
+		if model_to_draw, err = value.(models.Model); !err {
+			panic(model_to_draw)
+		}
+
+		for _, triangle := range model_to_draw.Triangles {
+			for i := range triangle.Points {
+				for w := range triangle.Points[i].Weight {
+					weight := &triangle.Points[i].Weight[w]
+
+					tracking_data_for_user, ok := networking.UsersFaceTrackingData.Load(key)
+					if ok {
+						data, ok := tracking_data_for_user.(networking.FaceTrackingNetworked)
+
+						if ok {
+							weight.RealValue = float64(int(float64(100*data.FaceTrackingData[weight.Name]))) / 100
+						}
+					}
+				}
+			}
+			triangle_op := ebiten.DrawImageOptions{}
+			triangle_op.GeoM.Translate(tracking.AverageHeadPos.X, tracking.AverageHeadPos.Y)
+			triangle.Draw(UpscaleImg, true)
+		}
+
+		return true
+	})
 
 	screen.DrawImage(UpscaleImg, &op)
 }

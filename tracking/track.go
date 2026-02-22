@@ -2,7 +2,6 @@ package tracking
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"main/utils"
 	"math"
@@ -155,7 +154,6 @@ func (face *TrackingData) Update() {
 
 	HeadAngle += ((utils.Deg2Rad(utils.GetAngle(utils.Vec2{X: face.Mouth.UpperLip[0], Y: face.Mouth.UpperLip[1]}, face.AverageLeftEyePos)) + utils.GetAngle(utils.Vec2{X: face.Mouth.UpperLip[0], Y: face.Mouth.UpperLip[1]}, face.AverageRightEyePos)) / 2) - 19
 	HeadAngle /= 2
-	fmt.Println(HeadAngle)
 
 	AverageHeadPos = face.AverageHeadPos
 }

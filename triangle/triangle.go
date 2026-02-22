@@ -103,6 +103,7 @@ type Triangle struct {
 	Points      [3]Point
 	Image       *textures.Texture
 	Texture     *ebiten.Image
+	TextureSize utils.Vec2
 	TexturePath string
 	Color       utils.Vec3
 }
@@ -244,6 +245,11 @@ func (triangle *Triangle) SetTexture(path string) {
 	temp_img, _, err := ebitenutil.NewImageFromFile(path)
 	if err != nil {
 		panic(err)
+	}
+
+	triangle.TextureSize = utils.Vec2{
+		X: float64(temp_img.Bounds().Dx()),
+		Y: float64(temp_img.Bounds().Dy()),
 	}
 
 	triangle.Texture = triangle.Image.Img

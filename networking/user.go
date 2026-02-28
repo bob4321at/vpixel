@@ -6,6 +6,7 @@ import (
 	"io"
 	"main/models"
 	"main/tracking"
+	"main/utils"
 	"net/http"
 	"sync"
 	"time"
@@ -18,8 +19,12 @@ type UserJson struct {
 }
 
 type FaceTrackingNetworked struct {
-	ID               uint8
-	FaceTrackingData map[string]float64
+	ID                uint8
+	FaceTrackingData  map[string]float64
+	AverageHeadPos    utils.Vec2
+	HeadAngle         float64
+	DistToEyes        float64
+	AverageDistToEyes float64
 }
 
 var Users []UserJson
@@ -52,7 +57,14 @@ func UploadThisUser() {
 	go func() {
 		for true {
 			time.Sleep(time.Second / 10)
-			networked_face_tracking_data := FaceTrackingNetworked{ThisUsersId, map[string]float64{}}
+			networked_face_tracking_data := FaceTrackingNetworked{
+				ID:                ThisUsersId,
+				FaceTrackingData:  map[string]float64{},
+				AverageHeadPos:    tracking.AverageHeadPos,
+				HeadAngle:         tracking.HeadAngle,
+				DistToEyes:        tracking.DistToEyes,
+				AverageDistToEyes: tracking.AverageDistToEyes,
+			}
 
 			for key, data := range tracking.WeightOptions {
 				networked_face_tracking_data.FaceTrackingData[key] = data

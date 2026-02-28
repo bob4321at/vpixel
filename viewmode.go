@@ -17,27 +17,8 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 	UpscaleImg.Fill(color.RGBA{0, 0, 0, 0})
 
 	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-66*2.5, -60*2.5)
-	op.GeoM.Rotate(tracking.HeadAngle * (3.14159 / 180))
-	op.GeoM.Scale(tracking.DistToEyes/tracking.AverageDistToEyes, tracking.DistToEyes/tracking.AverageDistToEyes)
-	op.GeoM.Translate(66*2.5, 60*2.5)
-	op.GeoM.Scale(3, 3)
-	op.GeoM.Translate(-66*2.5+tracking.AverageHeadPos.X, -60*2.5+tracking.AverageHeadPos.Y)
-
-	for _, triangle := range model.Triangles {
-		for i := range triangle.Points {
-			for w := range triangle.Points[i].Weight {
-				weight := &triangle.Points[i].Weight[w]
-
-				weight.RealValue = float64(int(float64(100*tracking.WeightOptions[weight.Name]))) / 100
-			}
-		}
-		triangle_op := ebiten.DrawImageOptions{}
-		triangle_op.GeoM.Translate(tracking.AverageHeadPos.X, tracking.AverageHeadPos.Y)
-		triangle.Draw(UpscaleImg, true)
-	}
-
 	networking.UsersModel.Range(func(key, value any) bool {
+		NetworkedUserUpscaleImg := ebiten.NewImage(360, 240)
 		if networking.ThisUsersId == key {
 			return true
 		}
@@ -49,10 +30,10 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 			panic(model_to_draw)
 		}
 
-		tracking_data_for_user, ok := networking.UsersFaceTrackingData.Load(key)
+		tracking_data_for_user, ok := networking.UsersFaceTrackingData.Load(key.(uint8))
 		data, ok := tracking_data_for_user.(networking.FaceTrackingNetworked)
-		data.HeadAngle = 0
 		if ok {
+			data.HeadAngle = 0
 			op.GeoM.Reset()
 			op.GeoM.Translate(-66*2.5, -60*2.5)
 			op.GeoM.Rotate(data.HeadAngle * (3.14159 / 180))
@@ -73,11 +54,34 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 				}
 				triangle_op := ebiten.DrawImageOptions{}
 				triangle_op.GeoM.Translate(tracking.AverageHeadPos.X, tracking.AverageHeadPos.Y)
-				triangle.Draw(UpscaleImg, true)
+				triangle.Draw(NetworkedUserUpscaleImg, true)
 			}
+			screen.DrawImage(NetworkedUserUpscaleImg, &op)
 		}
+
 		return true
 	})
+
+	op.GeoM.Reset()
+	op.GeoM.Translate(-66*2.5, -60*2.5)
+	op.GeoM.Rotate(tracking.HeadAngle * (3.14159 / 180))
+	op.GeoM.Scale(tracking.DistToEyes/tracking.AverageDistToEyes, tracking.DistToEyes/tracking.AverageDistToEyes)
+	op.GeoM.Translate(66*2.5, 60*2.5)
+	op.GeoM.Scale(3, 3)
+	op.GeoM.Translate(-66*2.5+tracking.AverageHeadPos.X, -60*2.5+tracking.AverageHeadPos.Y)
+
+	for _, triangle := range model.Triangles {
+		for i := range triangle.Points {
+			for w := range triangle.Points[i].Weight {
+				weight := &triangle.Points[i].Weight[w]
+
+				weight.RealValue = float64(int(float64(100*tracking.WeightOptions[weight.Name]))) / 100
+			}
+		}
+		triangle_op := ebiten.DrawImageOptions{}
+		triangle_op.GeoM.Translate(tracking.AverageHeadPos.X, tracking.AverageHeadPos.Y)
+		triangle.Draw(UpscaleImg, true)
+	}
 
 	screen.DrawImage(UpscaleImg, &op)
 }

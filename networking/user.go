@@ -3,6 +3,7 @@ package networking
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"main/models"
 	"main/tracking"
@@ -113,7 +114,11 @@ func UploadThisUser() {
 				for _, model := range other_models.OtherModels {
 					new_model := TurnNetworkedModelToModel(model)
 					UsersModel.Store(model.UserID, new_model)
+					fmt.Println(new_model)
+					fmt.Println()
 				}
+				fmt.Println()
+				fmt.Println()
 			}
 		}
 	}()

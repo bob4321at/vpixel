@@ -24,17 +24,6 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 	op.GeoM.Scale(3, 3)
 	op.GeoM.Translate(-66*2.5+tracking.AverageHeadPos.X, -60*2.5+tracking.AverageHeadPos.Y)
 
-	// mouth_openness_string := "MouthOpenness: " + strconv.FormatFloat(tracking.WeightOptions["mouth_open"], 'f', -1, 64)
-	// ebitenutil.DebugPrintAt(screen, mouth_openness_string, 1, 1)
-	// mouth_wideness_string := "MouthWideness: " + strconv.FormatFloat(tracking.WeightOptions["mouth_width"], 'f', -1, 64)
-	// ebitenutil.DebugPrintAt(screen, mouth_wideness_string, 1, 16)
-	// left_eye_openess := "LeftEyeOpeness: " + strconv.FormatFloat(tracking.WeightOptions["lefteye_open"], 'f', -1, 64)
-	// ebitenutil.DebugPrintAt(screen, left_eye_openess, 1, 32)
-	// right_eye_openess := "RightEyeOpeness: " + strconv.FormatFloat(tracking.WeightOptions["righteye_open"], 'f', -1, 64)
-	// ebitenutil.DebugPrintAt(screen, right_eye_openess, 1, 48)
-	// head_angle_string := "HeadAngle: " + strconv.FormatFloat(tracking.HeadAngle, 'f', -1, 64)
-	// ebitenutil.DebugPrintAt(screen, head_angle_string, 1, 64)
-
 	for _, triangle := range model.Triangles {
 		for i := range triangle.Points {
 			for w := range triangle.Points[i].Weight {
@@ -62,6 +51,7 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 
 		tracking_data_for_user, ok := networking.UsersFaceTrackingData.Load(key)
 		data, ok := tracking_data_for_user.(networking.FaceTrackingNetworked)
+		data.HeadAngle = 0
 		if ok {
 			op.GeoM.Reset()
 			op.GeoM.Translate(-66*2.5, -60*2.5)

@@ -1,6 +1,9 @@
 package networking
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +21,18 @@ func StartServer() {
 	go func() {
 		InitialNetworkStarted = true
 		UploadThisUser()
+	}()
+
+	go func() {
+		for true {
+			UserUpdated.Range(func(key, value any) bool {
+				fmt.Println()
+				fmt.Println(key.(int), value.(bool))
+				fmt.Println()
+				return true
+			})
+			time.Sleep(time.Millisecond * 10)
+		}
 	}()
 
 	r.Run(":8181")

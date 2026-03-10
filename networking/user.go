@@ -16,11 +16,11 @@ import (
 )
 
 type UserJson struct {
-	ID uint8
+	ID int
 }
 
 type FaceTrackingNetworked struct {
-	ID                uint8
+	ID                int
 	FaceTrackingData  map[string]float64
 	AverageHeadPos    utils.Vec2
 	HeadAngle         float64
@@ -33,7 +33,7 @@ var UsersModel sync.Map
 
 var UsersFaceTrackingData sync.Map
 
-var ThisUsersId uint8
+var ThisUsersId int
 
 var UserUpdated sync.Map
 
@@ -77,9 +77,8 @@ func UploadThisUser() {
 			}
 
 			if resp, err = http.Post("http://"+JoinServerAddress+"/SetUserFaceTrackingData", "application/json", bytes.NewBuffer(networked_face_tracking_data_bytes)); err != nil {
-				panic(err)
+				fmt.Println("facedata didnt send")
 			}
-
 			resp_bytes, err := io.ReadAll(resp.Body)
 			if err != nil {
 				panic(err)
@@ -90,35 +89,33 @@ func UploadThisUser() {
 				panic(err)
 			}
 
-			if IsUserUpdated.ID == 0 {
-				user_to_send := UserJson{ID: ThisUsersId}
-				user_to_send_bytes, err := json.Marshal(user_to_send)
-				if err != nil {
-					panic(err)
-				}
-				resp, err := http.Post("http://"+JoinServerAddress+"/GetOtherUsersModels", "application/json", bytes.NewBuffer(user_to_send_bytes))
-				if err != nil {
-					panic(err)
-				}
+			if IsUserUpdated.ID != 0 || ThisUsersId == 0 {
+				continue
+			}
 
-				resp_bytes, err := io.ReadAll(resp.Body)
-				if err != nil {
-					panic(err)
-				}
+			user_to_send := UserJson{ID: ThisUsersId}
+			user_to_send_bytes, err := json.Marshal(user_to_send)
+			if err != nil {
+				panic(err)
+			}
+			resp, err := http.Post("http://"+JoinServerAddress+"/GetOtherUsersModels", "application/json", bytes.NewBuffer(user_to_send_bytes))
+			if err != nil {
+				panic(err)
+			}
 
-				other_models := OtherUsersModels{}
-				if err := json.Unmarshal(resp_bytes, &other_models); err != nil {
-					panic(err)
-				}
+			resp_bytes, err = io.ReadAll(resp.Body)
+			if err != nil {
+				panic(err)
+			}
 
-				for _, model := range other_models.OtherModels {
-					new_model := TurnNetworkedModelToModel(model)
-					UsersModel.Store(model.UserID, new_model)
-					fmt.Println(new_model)
-					fmt.Println()
-				}
-				fmt.Println()
-				fmt.Println()
+			other_models := OtherUsersModels{}
+			if err := json.Unmarshal(resp_bytes, &other_models); err != nil {
+				panic(err)
+			}
+
+			for _, model := range other_models.OtherModels {
+				new_model := TurnNetworkedModelToModel(model)
+				UsersModel.Store(model.UserID, new_model)
 			}
 		}
 	}()
@@ -142,12 +139,13 @@ func GetOtherUsersModels(c *gin.Context) {
 	models_to_send := OtherUsersModels{}
 
 	UsersModel.Range(func(key, value any) bool {
-		if key == GetUserIDJson.ID {
+		if key.(int) == GetUserIDJson.ID {
 			return true
 		}
 
 		model := value.(models.Model)
 		new_model := TurnModelToNetworkedModel(&model)
+		new_model.UserID = key.(int)
 
 		models_to_send.OtherModels = append(models_to_send.OtherModels, new_model)
 		return true
@@ -182,7 +180,7 @@ func SetUserFaceTrackingData(c *gin.Context) {
 	}
 
 	if len(Users) == 1 {
-		c.JSON(http.StatusOK, UserJson{ID: 1})
+		c.JSON(http.StatusOK, UserJson{ID: 0})
 	} else {
 		c.JSON(http.StatusOK, UserJson{ID: 0})
 	}
@@ -209,7 +207,7 @@ func SetUsersModel(c *gin.Context) {
 
 func AddUser(c *gin.Context) {
 	Usr := UserJson{}
-	Usr.ID = uint8(len(Users))
+	Usr.ID = int(len(Users))
 
 	Users = append(Users, Usr)
 

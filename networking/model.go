@@ -12,7 +12,7 @@ import (
 
 type NetworkedModelJson struct {
 	Triangles []NetworkedTriangleJson
-	UserID    uint8
+	UserID    int
 }
 
 type NetworkedTriangleJson struct {

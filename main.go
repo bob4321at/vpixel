@@ -51,16 +51,16 @@ func (g *Game) Update() error {
 
 	switch Mode {
 	case EditMode:
-		ebiten.SetWindowMousePassthrough(false)
+		// ebiten.SetWindowMousePassthrough(false)
 		EditUpdate(&g.debugui, &Model)
 	case ViewMode:
-		ebiten.SetWindowMousePassthrough(true)
+		// ebiten.SetWindowMousePassthrough(true)
 		ViewUpdate()
 	case NetworkConfig:
-		ebiten.SetWindowMousePassthrough(false)
+		// ebiten.SetWindowMousePassthrough(false)
 		NetworkModeUpdate(&g.debugui, &Model)
 	case TrackingMode:
-		ebiten.SetWindowMousePassthrough(false)
+		// ebiten.SetWindowMousePassthrough(false)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func main() {
 	ebiten.SetWindowSize(426*5, 240*5)
 
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetWindowDecorated(false)
+	ebiten.SetWindowDecorated(true)
 
 	Model = models.NewModel()
 

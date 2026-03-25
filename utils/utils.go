@@ -33,7 +33,7 @@ func GetAngle(point_1, point_2 Vec2) float64 {
 	return math.Atan2(offset_x, offset_y)
 }
 
-func Deg2Rad(num float64) float64 {
+func Rad2Deg(num float64) float64 {
 	return num * (180 / 3.14159)
 }
 

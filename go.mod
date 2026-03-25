@@ -5,7 +5,7 @@ go 1.25.4
 require (
 	github.com/ebitengine/debugui v0.2.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/hajimehoshi/ebiten/v2 v2.9.7
+	github.com/hajimehoshi/ebiten/v2 v2.8.8
 )
 
 require (

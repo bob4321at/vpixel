@@ -17,7 +17,7 @@ func NetworkModeUpdate(ui *debugui.DebugUI, model *models.Model) {
 		ctx.Window("Networking", image.Rect(0, 0, 426*3, 240*3), func(layout debugui.ContainerLayout) {
 			if networking.InitialNetworkStarted {
 				ctx.Button("Send New Model").On(func() {
-					networking.TellServerToChangeModel(model)
+					networking.TellServerToChangeModel(*model)
 				})
 				return
 			}

@@ -14,7 +14,8 @@ import (
 )
 
 type Model struct {
-	Triangles []triangle.Triangle
+	RenderLayer *ebiten.Image
+	Triangles   []triangle.Triangle
 }
 
 type ModelJson struct {
@@ -32,6 +33,7 @@ func (model *Model) Encode() ModelJson {
 }
 
 func (model *ModelJson) Decode(new_model *Model) {
+	new_model.RenderLayer = ebiten.NewImage(360, 240)
 	new_model.Triangles = nil
 	for _, triangle := range model.Triangles {
 		new_model.Triangles = append(new_model.Triangles, triangle.Decode())
@@ -164,7 +166,7 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 	})
 
 	Ctx.Button("New Triangle").On(func() {
-		model.Triangles = append(model.Triangles, triangle.NewTriangle(320, 240))
+		model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
 	})
 }
 
@@ -183,7 +185,7 @@ func (model *Model) Update() {
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyN) {
-			model.Triangles = append(model.Triangles, triangle.NewTriangle(320, 240))
+			model.Triangles = append(model.Triangles, triangle.NewTriangle(360, 240))
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyV) && ebiten.IsKeyPressed(ebiten.KeyShift) {
@@ -291,5 +293,6 @@ func (model *Model) Draw(screen *ebiten.Image) {
 }
 
 func NewModel() (model Model) {
+	model.RenderLayer = ebiten.NewImage(360, 240)
 	return model
 }

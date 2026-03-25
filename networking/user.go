@@ -49,6 +49,7 @@ func UploadThisUser() {
 	if err != nil {
 		panic(err)
 	}
+	resp.Body.Close()
 
 	user_id_in_user := UserJson{}
 	json.Unmarshal(users_id_in_user_bytes, &user_id_in_user)
@@ -83,13 +84,15 @@ func UploadThisUser() {
 			if err != nil {
 				panic(err)
 			}
+			resp.Body.Close()
 
 			IsUserUpdated := UserJson{}
 			if err := json.Unmarshal(resp_bytes, &IsUserUpdated); err != nil {
 				panic(err)
 			}
+			// fmt.Println(IsUserUpdated)
 
-			if IsUserUpdated.ID != 0 || ThisUsersId == 0 {
+			if IsUserUpdated.ID == 1 || ThisUsersId == 0 {
 				continue
 			}
 
@@ -98,15 +101,16 @@ func UploadThisUser() {
 			if err != nil {
 				panic(err)
 			}
-			resp, err := http.Post("http://"+JoinServerAddress+"/GetOtherUsersModels", "application/json", bytes.NewBuffer(user_to_send_bytes))
+			resp_get_models, err := http.Post("http://"+JoinServerAddress+"/GetOtherUsersModels", "application/json", bytes.NewBuffer(user_to_send_bytes))
 			if err != nil {
 				panic(err)
 			}
 
-			resp_bytes, err = io.ReadAll(resp.Body)
+			resp_bytes, err = io.ReadAll(resp_get_models.Body)
 			if err != nil {
 				panic(err)
 			}
+			resp_get_models.Body.Close()
 
 			other_models := OtherUsersModels{}
 			if err := json.Unmarshal(resp_bytes, &other_models); err != nil {
@@ -115,6 +119,8 @@ func UploadThisUser() {
 
 			for _, model := range other_models.OtherModels {
 				new_model := TurnNetworkedModelToModel(model)
+				fmt.Println("\n\n")
+				fmt.Println(new_model)
 				UsersModel.Store(model.UserID, new_model)
 			}
 		}
@@ -144,7 +150,7 @@ func GetOtherUsersModels(c *gin.Context) {
 		}
 
 		model := value.(models.Model)
-		new_model := TurnModelToNetworkedModel(&model)
+		new_model := TurnModelToNetworkedModel(model)
 		new_model.UserID = key.(int)
 
 		models_to_send.OtherModels = append(models_to_send.OtherModels, new_model)
@@ -180,10 +186,27 @@ func SetUserFaceTrackingData(c *gin.Context) {
 	}
 
 	if len(Users) == 1 {
-		c.JSON(http.StatusOK, UserJson{ID: 0})
+		c.JSON(http.StatusOK, UserJson{ID: 1})
 	} else {
 		c.JSON(http.StatusOK, UserJson{ID: 0})
 	}
+}
+
+type CollectionFaceTrackingDataNetworked struct {
+	FaceTrackingDatas []FaceTrackingNetworked
+}
+
+func GetUserFaceTrackingData(c *gin.Context) {
+	face_tracking_data_to_send := CollectionFaceTrackingDataNetworked{}
+
+	UsersFaceTrackingData.Range(func(key, value any) bool {
+		data := value.(FaceTrackingNetworked)
+		data.ID = key.(int)
+		face_tracking_data_to_send.FaceTrackingDatas = append(face_tracking_data_to_send.FaceTrackingDatas, data)
+		return true
+	})
+
+	c.JSON(http.StatusOK, face_tracking_data_to_send)
 }
 
 func SetUsersModel(c *gin.Context) {
@@ -193,7 +216,9 @@ func SetUsersModel(c *gin.Context) {
 	}
 
 	user_model_json := NetworkedModelJson{}
-	json.Unmarshal(user_model_json_bytes, &user_model_json)
+	if err := json.Unmarshal(user_model_json_bytes, &user_model_json); err != nil {
+		panic(err)
+	}
 
 	new_model := TurnNetworkedModelToModel(user_model_json)
 

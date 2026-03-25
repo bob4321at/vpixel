@@ -51,16 +51,14 @@ func (g *Game) Update() error {
 
 	switch Mode {
 	case EditMode:
-		// ebiten.SetWindowMousePassthrough(false)
 		EditUpdate(&g.debugui, &Model)
 	case ViewMode:
-		// ebiten.SetWindowMousePassthrough(true)
 		ViewUpdate()
 	case NetworkConfig:
-		// ebiten.SetWindowMousePassthrough(false)
 		NetworkModeUpdate(&g.debugui, &Model)
 	case TrackingMode:
-		// ebiten.SetWindowMousePassthrough(false)
+	default:
+		panic("stateless you did something very wrong")
 	}
 
 	return nil

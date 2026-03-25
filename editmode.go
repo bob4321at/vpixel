@@ -57,19 +57,17 @@ func EditUpdate(ui *debugui.DebugUI, model *models.Model) {
 	Model.Update()
 }
 
-var UpscaleImg = ebiten.NewImage(360, 240)
-
 func EditDraw(screen *ebiten.Image, game Game, ui *debugui.DebugUI) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	UpscaleImg.Fill(color.RGBA{0, 0, 125, 255})
+	Model.RenderLayer.Fill(color.RGBA{0, 0, 125, 255})
 
 	op := ebiten.DrawImageOptions{}
 	op.GeoM.Scale(3, 3)
 	op.GeoM.Translate(66*5, 0)
 
-	Model.Draw(UpscaleImg)
+	Model.Draw(Model.RenderLayer)
 
-	screen.DrawImage(UpscaleImg, &op)
+	screen.DrawImage(Model.RenderLayer, &op)
 
 	ui.Draw(screen)
 }

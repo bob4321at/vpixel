@@ -223,6 +223,7 @@ func (triangle *Triangle) Draw(screen *ebiten.Image, test_or_real bool) {
 	opts.Uniforms = triangle.Image.Uniforms
 	opts.GeoM = op.GeoM
 	screen.DrawRectShader(triangle.Image.Img.Bounds().Dx(), triangle.Image.Img.Bounds().Dy(), triangle.Image.Shader, opts)
+	ebitenutil.DebugPrint(triangle.Image.Img, "please")
 }
 
 func (triangle *Triangle) SetPointsVectorPos(point_1, point_2, point_3 utils.Vec2) {

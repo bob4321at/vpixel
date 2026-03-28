@@ -84,7 +84,9 @@ func (face *TrackingData) Update() {
 		return
 	}
 
-	json.Unmarshal(FaceDataBytes, &face)
+	if err := json.Unmarshal(FaceDataBytes, &face); err != nil {
+		panic(err)
+	}
 
 	face.LeftEye.Bottom[0] *= scaleX
 	face.LeftEye.Bottom[1] *= scaleY

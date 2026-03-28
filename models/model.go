@@ -78,7 +78,7 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 					Ctx.SliderF(&weight.Maximum, 0, 1, 0.01, 3)
 					Ctx.SliderF(&weight.TestValue, 0, 1, 0.01, 3)
 					weight_pos_x := strconv.Itoa(int(weight.Posistion.X))
-					weight_pos_y := strconv.Itoa(int(weight.Posistion.X))
+					weight_pos_y := strconv.Itoa(int(weight.Posistion.Y))
 					Ctx.Text(weight_pos_x)
 					Ctx.Text(weight_pos_y)
 					Ctx.Button("Set Weight Pos").On(func() {

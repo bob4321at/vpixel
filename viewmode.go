@@ -13,6 +13,8 @@ import (
 func ViewUpdate() {
 }
 
+var NetworkedLayer *ebiten.Image = ebiten.NewImage(360, 240)
+
 func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Model) {
 	screen.Fill(color.RGBA{0, 255, 0, 255})
 	model.RenderLayer.Fill(color.RGBA{0, 0, 0, 0})
@@ -63,11 +65,10 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 					weight.RealValue = float64(int(float64(100*data.FaceTrackingData[weight.Name]))) / 100
 				}
 			}
-			model_to_draw.RenderLayer.DrawImage(triangle.Texture, &ebiten.DrawImageOptions{})
-			triangle.Draw(model_to_draw.RenderLayer, true)
-			triangle.Draw(screen, true)
+			triangle.Draw(NetworkedLayer, true)
+			// triangle.Draw(screen, true)
 		}
-		screen.DrawImage(model_to_draw.RenderLayer, &op)
+		screen.DrawImage(NetworkedLayer, &op)
 
 		return true
 	})

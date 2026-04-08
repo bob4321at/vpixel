@@ -26,6 +26,9 @@ type FaceTrackingNetworked struct {
 	HeadAngle         float64
 	DistToEyes        float64
 	AverageDistToEyes float64
+	PosOffset         utils.Vec2
+	ScaleOffset       float64
+	RotationOffset    float64
 }
 
 var Users []UserJson
@@ -66,6 +69,9 @@ func UploadThisUser() {
 				HeadAngle:         tracking.HeadAngle,
 				DistToEyes:        tracking.DistToEyes,
 				AverageDistToEyes: tracking.AverageDistToEyes,
+				PosOffset:         tracking.PosOffset,
+				ScaleOffset:       tracking.ScaleOffset,
+				RotationOffset:    tracking.RotationOffset,
 			}
 
 			for key, data := range tracking.WeightOptions {

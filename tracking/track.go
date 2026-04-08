@@ -40,6 +40,10 @@ type TrackingData struct {
 	AverageHeadPos     utils.Vec2
 	AverageLeftEyePos  utils.Vec2
 	AverageRightEyePos utils.Vec2
+
+	PosOffset      utils.Vec2
+	ScaleOffset    float64
+	RotationOffset float64
 }
 
 var scaleX = 426.0 / 320.0
@@ -68,6 +72,10 @@ var EyeTrack bool
 
 var DistToEyes float64
 var AverageDistToEyes float64
+
+var PosOffset utils.Vec2
+var ScaleOffset float64 = 1
+var RotationOffset float64 = 0
 
 func (face *TrackingData) Update() {
 	HttpRequest, err := http.Get("http://localhost:8080")

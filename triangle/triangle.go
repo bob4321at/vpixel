@@ -94,9 +94,10 @@ type Weight struct {
 }
 
 type Point struct {
-	VecPos utils.Vec2
-	UvPos  utils.Vec2
-	Weight []Weight
+	TargetVecPos utils.Vec2
+	RealVecPos   utils.Vec2
+	UvPos        utils.Vec2
+	Weight       []Weight
 }
 
 type Triangle struct {
@@ -134,7 +135,10 @@ func (triangle *TriangleJson) Decode() Triangle {
 func (triangle *Triangle) Encode() TriangleJson {
 	new_triangle := TriangleJson{}
 
-	new_triangle.Points = triangle.Points
+	new_triangle.Points = [3]Point{}
+	for i, point := range triangle.Points {
+		new_triangle.Points[i] = point
+	}
 	new_triangle.TexturePath = triangle.TexturePath
 	new_triangle.Color = triangle.Color
 
@@ -148,9 +152,9 @@ func (triangle *Triangle) Draw(screen *ebiten.Image, test_or_real bool) {
 	opts.Images[1] = triangle.Texture
 
 	ModifiedPointPoses := []utils.Vec2{
-		triangle.Points[0].VecPos,
-		triangle.Points[1].VecPos,
-		triangle.Points[2].VecPos,
+		triangle.Points[0].TargetVecPos,
+		triangle.Points[1].TargetVecPos,
+		triangle.Points[2].TargetVecPos,
 	}
 
 	for i := range triangle.Points {
@@ -226,9 +230,9 @@ func (triangle *Triangle) Draw(screen *ebiten.Image, test_or_real bool) {
 }
 
 func (triangle *Triangle) SetPointsVectorPos(point_1, point_2, point_3 utils.Vec2) {
-	triangle.Points[0].VecPos = point_1
-	triangle.Points[1].VecPos = point_2
-	triangle.Points[2].VecPos = point_3
+	triangle.Points[0].TargetVecPos = point_1
+	triangle.Points[1].TargetVecPos = point_2
+	triangle.Points[2].TargetVecPos = point_3
 }
 
 func (triangle *Triangle) SetPointsUvPos(point_1, point_2, point_3 utils.Vec2) {

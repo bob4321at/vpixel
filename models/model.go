@@ -87,7 +87,7 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 
 					if weight.Posistion_Changing {
 						if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonRight) {
-							weight.Posistion = utils.Vec2{X: utils.MousePos.X - model.Triangles[SelectedTriangle].Points[LastSelectedVertex].VecPos.X, Y: utils.MousePos.Y - model.Triangles[SelectedTriangle].Points[LastSelectedVertex].VecPos.Y}
+							weight.Posistion = utils.Vec2{X: utils.MousePos.X - model.Triangles[SelectedTriangle].Points[LastSelectedVertex].TargetVecPos.X, Y: utils.MousePos.Y - model.Triangles[SelectedTriangle].Points[LastSelectedVertex].TargetVecPos.Y}
 							weight.Posistion_Changing = false
 						}
 					}
@@ -137,14 +137,14 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 				if &model.Triangles[i] != &model.Triangles[SelectedTriangle] {
 					for _, vertex := range other_traingles.Points {
 						dist := utils.GetDistance(
-							model.Triangles[SelectedTriangle].Points[SelectedVertex].VecPos.X,
-							model.Triangles[SelectedTriangle].Points[SelectedVertex].VecPos.Y,
-							vertex.VecPos.X,
-							vertex.VecPos.Y,
+							model.Triangles[SelectedTriangle].Points[SelectedVertex].TargetVecPos.X,
+							model.Triangles[SelectedTriangle].Points[SelectedVertex].TargetVecPos.Y,
+							vertex.TargetVecPos.X,
+							vertex.TargetVecPos.Y,
 						)
 
 						if dist < float64(closest_dist) {
-							closest_point = vertex.VecPos
+							closest_point = vertex.TargetVecPos
 							closest_dist = dist
 						}
 					}
@@ -154,7 +154,7 @@ func (model *Model) TriangleEditWindow(layout debugui.ContainerLayout) {
 			nothing_found := utils.Vec2{X: -1, Y: -1}
 
 			if closest_point != nothing_found {
-				model.Triangles[SelectedTriangle].Points[SelectedVertex].VecPos = closest_point
+				model.Triangles[SelectedTriangle].Points[SelectedVertex].TargetVecPos = closest_point
 			}
 		}
 	}
@@ -249,14 +249,14 @@ func (model *Model) Update() {
 			}
 		}
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
-			model.Triangles[SelectedTriangle].Points[LastSelectedVertex].VecPos = utils.Vec2{X: utils.MousePos.X, Y: utils.MousePos.Y}
+			model.Triangles[SelectedTriangle].Points[LastSelectedVertex].TargetVecPos = utils.Vec2{X: utils.MousePos.X, Y: utils.MousePos.Y}
 		} else {
 			DistFromMouse := 1000000000.0
 
 			if len(model.Triangles) != 0 && SelectedTriangle != -1 {
 				triangle := model.Triangles[SelectedTriangle]
 				for p, Point := range triangle.Points {
-					dist := utils.GetDistance(utils.MousePos.X, utils.MousePos.Y, Point.VecPos.X, Point.VecPos.Y)
+					dist := utils.GetDistance(utils.MousePos.X, utils.MousePos.Y, Point.TargetVecPos.X, Point.TargetVecPos.Y)
 					if dist < float64(DistFromMouse) {
 						SelectedVertex = p
 						DistFromMouse = dist
@@ -275,15 +275,15 @@ func (model *Model) Draw(screen *ebiten.Image) {
 	if len(model.Triangles) != 0 && SelectedTriangle != -1 {
 		selected_tri := &model.Triangles[SelectedTriangle]
 		selected_tri.Draw(screen, false)
-		vector.StrokeLine(screen, float32(selected_tri.Points[0].VecPos.X), float32(selected_tri.Points[0].VecPos.Y), float32(selected_tri.Points[1].VecPos.X), float32(selected_tri.Points[1].VecPos.Y), 2, color.RGBA{125, 125, 125, 255}, false)
-		vector.StrokeLine(screen, float32(selected_tri.Points[0].VecPos.X), float32(selected_tri.Points[0].VecPos.Y), float32(selected_tri.Points[2].VecPos.X), float32(selected_tri.Points[2].VecPos.Y), 2, color.RGBA{125, 125, 125, 255}, false)
-		vector.StrokeLine(screen, float32(selected_tri.Points[2].VecPos.X), float32(selected_tri.Points[2].VecPos.Y), float32(selected_tri.Points[1].VecPos.X), float32(selected_tri.Points[1].VecPos.Y), 2, color.RGBA{125, 125, 125, 255}, false)
+		vector.StrokeLine(screen, float32(selected_tri.Points[0].TargetVecPos.X), float32(selected_tri.Points[0].TargetVecPos.Y), float32(selected_tri.Points[1].TargetVecPos.X), float32(selected_tri.Points[1].TargetVecPos.Y), 2, color.RGBA{125, 125, 125, 255}, false)
+		vector.StrokeLine(screen, float32(selected_tri.Points[0].TargetVecPos.X), float32(selected_tri.Points[0].TargetVecPos.Y), float32(selected_tri.Points[2].TargetVecPos.X), float32(selected_tri.Points[2].TargetVecPos.Y), 2, color.RGBA{125, 125, 125, 255}, false)
+		vector.StrokeLine(screen, float32(selected_tri.Points[2].TargetVecPos.X), float32(selected_tri.Points[2].TargetVecPos.Y), float32(selected_tri.Points[1].TargetVecPos.X), float32(selected_tri.Points[1].TargetVecPos.Y), 2, color.RGBA{125, 125, 125, 255}, false)
 
 		vertex := &selected_tri.Points[LastSelectedVertex]
-		vector.StrokeCircle(screen, float32(vertex.VecPos.X), float32(vertex.VecPos.Y), 2, 2, color.RGBA{100, 100, 100, 255}, false)
+		vector.StrokeCircle(screen, float32(vertex.TargetVecPos.X), float32(vertex.TargetVecPos.Y), 2, 2, color.RGBA{100, 100, 100, 255}, false)
 
 		for _, weight := range vertex.Weight {
-			vector.StrokeCircle(screen, float32(vertex.VecPos.X+weight.Posistion.X), float32(vertex.VecPos.Y+weight.Posistion.Y), 1, 1, color.RGBA{255, 100, 100, 255}, false)
+			vector.StrokeCircle(screen, float32(vertex.TargetVecPos.X+weight.Posistion.X), float32(vertex.TargetVecPos.Y+weight.Posistion.Y), 1, 1, color.RGBA{255, 100, 100, 255}, false)
 		}
 
 		if selected_tri.Texture != nil {

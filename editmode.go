@@ -54,6 +54,12 @@ func EditUpdate(ui *debugui.DebugUI, model *models.Model) {
 		panic(err)
 	}
 
+	for i := range model.Triangles {
+		for j := range model.Triangles[i].Points {
+			model.Triangles[i].Points[j].TargetVecPos = model.Triangles[i].Points[j].RealVecPos
+		}
+	}
+
 	Model.Update()
 }
 

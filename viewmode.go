@@ -121,13 +121,6 @@ func ViewDraw(screen *ebiten.Image, face tracking.TrackingData, model models.Mod
 		}
 
 		op.GeoM.Reset()
-		// op.GeoM.Translate(-66*2.5, -60*2.5)
-		// op.GeoM.Rotate(data.HeadAngle*(3.14159/180) + data.RotationOffset)
-		// op.GeoM.Scale((data.DistToEyes/data.AverageDistToEyes)*data.ScaleOffset, (data.DistToEyes/data.AverageDistToEyes)*data.ScaleOffset)
-		// op.GeoM.Translate(66*2.5, 60*2.5)
-		// op.GeoM.Scale(3, 3)
-		// op.GeoM.Translate(-66*2.5+data.AverageHeadPos.X+data.PosOffset.X, -60*2.5+data.AverageHeadPos.Y+data.PosOffset.Y)
-
 		op.GeoM.Translate(-66*2.5, -60*2.5)
 		op.GeoM.Rotate(data.HeadAngle*(3.14159/180) + data.RotationOffset)
 		op.GeoM.Scale((data.DistToEyes/data.AverageDistToEyes)*data.ScaleOffset, (data.DistToEyes/data.AverageDistToEyes)*data.ScaleOffset)

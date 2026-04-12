@@ -31,7 +31,7 @@ func TurnTriangleToNetworkedTriangle(tri triangle.Triangle) NetworkedTriangleJso
 	for index, point := range tri.Points {
 		new_point := triangle.Point{}
 		new_point.UvPos = point.UvPos
-		new_point.VecPos = point.VecPos
+		new_point.TargetVecPos = point.TargetVecPos
 		new_point.Weight = []triangle.Weight{}
 		for _, weight := range tri.Points[index].Weight {
 			new_weight := triangle.Weight{}
@@ -65,7 +65,7 @@ func TurnNetworkedTriangleToTriangle(tri NetworkedTriangleJson) triangle.Triangl
 	for index, point := range tri.Points {
 		new_point := triangle.Point{}
 		new_point.UvPos = point.UvPos
-		new_point.VecPos = point.VecPos
+		new_point.TargetVecPos = point.TargetVecPos
 		new_point.Weight = []triangle.Weight{}
 		for _, weight := range tri.Points[index].Weight {
 			new_weight := triangle.Weight{}
